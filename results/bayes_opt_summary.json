@@ -1,0 +1,52 @@
+{
+  "untuned": {
+    "params": {
+      "n_estimators": 300,
+      "learning_rate": 0.05,
+      "num_leaves": 31
+    },
+    "cv_macro_f1": 0.9379604737883834,
+    "cv_macro_f1_std": 0.010608517067010175,
+    "cv_top1": 0.90511471242095,
+    "cv_log_loss": 0.0928979323505834,
+    "test_top1": 0.9048538622129436,
+    "test_macro_f1": 0.9388221902805804,
+    "test_precision": 0.9409199078975166,
+    "test_recall": 0.9367574469669441,
+    "test_log_loss": 0.08739149249998902,
+    "test_route_continuity": 0.7559698990248065,
+    "fit_time_s": 4.5540611743927,
+    "inference_ms_per_1k_obs": 40.10913516385072
+  },
+  "tuned": {
+    "params": {
+      "n_estimators": 300,
+      "learning_rate": 0.0841769562117689,
+      "num_leaves": 155,
+      "min_child_samples": 62,
+      "subsample": 0.9768649464577864,
+      "colsample_bytree": 0.9292107687860114,
+      "reg_lambda": 0.8906231514082183,
+      "reg_alpha": 0.7929203164792992
+    },
+    "cv_macro_f1": 0.9378773128737755,
+    "cv_macro_f1_std": 0.010074540824090246,
+    "cv_top1": 0.9069686024100065,
+    "cv_log_loss": 0.0982131024708857,
+    "test_top1": 0.9065240083507307,
+    "test_macro_f1": 0.9385035980214149,
+    "test_precision": 0.9420147660695737,
+    "test_recall": 0.935083672125836,
+    "test_log_loss": 0.0891827798914211,
+    "test_route_continuity": 0.7678505023661175,
+    "fit_time_s": 6.913885116577148,
+    "inference_ms_per_1k_obs": 70.8305014449022
+  },
+  "search": {
+    "n_trials": 30,
+    "sampler": "TPE (seed 42, 8 random startup trials)",
+    "objective": "mean 3-fold GroupKFold observation Top-1 accuracy",
+    "best_value": 0.9045668874916427,
+    "search_time_s": 647.2375161647797
+  }
+}
