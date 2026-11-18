@@ -7,6 +7,6 @@
     "Varun ML (PES1UG25AM816)",
     "Vinod Kumar L (PES1UG25AM817)"
   ],
-  "repo": "[GitHub URL]",
+  "repo": "https://github.com/Vasu-Tripathi/PathSnap",
   "ai_disclosure": "An AI assistant (Claude, Anthropic) was used to help write code, debug, and draft parts of this report. All experiments were actually executed with the code in the repository, and every metric, table and figure in this report is generated from the logged result files. The team reviewed the methodology, re-ran the pipeline, and is able to explain and defend all of the work."
 }

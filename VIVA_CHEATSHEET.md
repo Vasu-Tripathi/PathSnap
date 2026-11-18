@@ -41,8 +41,24 @@ Noisy 1 Hz GPS → the road arcs actually driven. Each trip has its own road net
 - Result: Top-1 improved by +0.17 points on test. F1 was flat and log loss slightly worse. After the HMM, tuned and untuned are equal. **Honest takeaway:** the features are the limit, not the hyperparameters.
 - TPE models the good and bad trial regions as two densities and picks the next trial where the good/bad ratio is high. It's smarter than grid search.
 
-**6. Leakage**
+**6. HMM / Viterbi**
+- Hidden states: the candidate arcs of each GPS point.
+- Emission: α·log(p_classifier).
+- Transition: −|network distance − straight-line GPS distance| / β, following Newson & Krumm. The network distance is the rest of arc a, plus the Dijkstra path from head(a) to tail(b), plus the start of b. An unreachable pair gets −∞.
+- Viterbi: δ_t(b) = max_a[δ_{t−1}(a) + logT] + logE, then backtrack.
+- **Gaps:** Δt > 60 s breaks the chain and decoding restarts. If all transitions are −∞ it also breaks and restarts.
+- After decoding, gaps between non-adjacent arcs are filled with shortest paths.
+- α=2 and β=5 m were tuned on **out-of-fold training predictions**, not on test.
+- Result: Top-1 0.9065 → 0.9350, route F1 0.899 → 0.950, continuity 0.768 → 0.999.
+- It helped on 9 of 10 trips. On trip 7 it was slightly worse (0.979 → 0.968), because junction switches were timed a few points differently while the route stayed the same.
+
+**7. Leakage**
 - Trip-grouped splits.
 - Scalers sit inside the pipelines.
 - The evaluator data is never read in development.
+- The API reads `.route` only *after* predicting, for scoring, and never sends it to the UI.
 - Nothing is hard-coded.
+
+**8. Deployment**
+- Laptop 1: `uvicorn api.app:app --host 0.0.0.0 --port 8000` with `PATHSNAP_EVAL_DIR` pointing at the eval trips. The console logs each request.
+- Laptop 2: `cd ui && python -m http.server 5500`, open it in a browser, then enter `http://<laptop1-ip>:8000` and click Connect.
