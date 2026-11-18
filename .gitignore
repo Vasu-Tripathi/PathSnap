@@ -6,3 +6,4 @@ __pycache__/
 results/data/cand_*.parquet
 results/data/preds/train_oof_*.parquet
 results/maps/*_notiles*.html
+data/eval_test/*/
