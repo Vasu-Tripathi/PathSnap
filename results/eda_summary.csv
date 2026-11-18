@@ -1,0 +1,3 @@
+partition,trips,gps_total,gps_mean,gps_min,gps_max,nan_rows,dup_timestamps,gaps_gt5s,nodes_mean,arcs_mean,isolated_nodes,route_contiguous
+student_test,10,19160,1916.0,262,3958,0,0,44,9068.9,18504.1,0,0.9997319034852546
+train,80,208417,2605.2125,361,19313,0,0,1216,24168.5625,48461.3,0,0.9993461551444497

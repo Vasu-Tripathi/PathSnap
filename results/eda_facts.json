@@ -1,0 +1,16 @@
+{
+  "anomalous_trips": [
+    "00000033",
+    "00000054"
+  ],
+  "frac_dt_eq_1": 0.9667981027487285,
+  "frac_dt_eq_2": 0.019609911775178363,
+  "frac_dt_gt_5": 0.0055387780400638275,
+  "max_dt": 153064.0,
+  "label_dist_median_all": 5.644859282242741,
+  "label_dist_p95_all": 139.0384586131937,
+  "candidate_miss_train": 0.11216455471482656,
+  "candidate_miss_train_excl_anom": 0.011759249154207119,
+  "candidate_miss_student_test": 0.0041231732776617624,
+  "nearest_arc_top1_student_test": 0.53241127348643
+}
