@@ -3,6 +3,7 @@ import os, json
 import numpy as np, pandas as pd
 import matplotlib; matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+plt.style.use("grayscale"); plt.rcParams.update({"font.family": "serif", "axes.prop_cycle": plt.cycler(color=["0.0", "0.55", "0.3", "0.75"])})
 from scipy.sparse import coo_matrix
 from scipy.sparse.csgraph import connected_components
 import _path
@@ -74,7 +75,7 @@ print(summ.T); print(facts)
 # ------------------------------------------------------------- plots
 F = _path.FIG
 fig, ax = plt.subplots(1, 3, figsize=(15, 4))
-for p, c in [("train", "tab:blue"), ("student_test", "tab:orange")]:
+for p, c in [("train", "0.0"), ("student_test", "0.6")]:
     ax[0].hist(inv[inv.partition == p].n_gps, bins=30, alpha=.6, label=p, color=c)
 ax[0].set(title="GPS observations per trip", xlabel="observations", ylabel="trips", xscale="linear"); ax[0].legend()
 v, c = np.unique(np.clip(dts, 0, 10), return_counts=True)
@@ -83,14 +84,14 @@ ax[2].hist(np.clip(obs.label_dist, 0, 100), bins=50); ax[2].set(title="GPS → a
 plt.tight_layout(); plt.savefig(f"{F}/eda_distributions.png", dpi=130); plt.close()
 
 fig, ax = plt.subplots(1, 3, figsize=(15, 4))
-ax[0].scatter(inv.n_nodes, inv.n_arcs, c=(inv.partition == "train").map({True: "tab:blue", False: "tab:orange"}), s=15)
+ax[0].scatter(inv.n_nodes, inv.n_arcs, c=(inv.partition == "train").map({True: "0.0", False: "0.6"}), s=15)
 ax[0].set(title="Road-network size per trip", xlabel="nodes", ylabel="arcs")
 ax[1].hist(inv.largest_strong_frac, bins=20); ax[1].set(title="Largest strongly-connected component (fraction of nodes)")
 ax[2].hist(inv.path_len_km, bins=30); ax[2].set(title="GPS trajectory length (km)")
 plt.tight_layout(); plt.savefig(f"{F}/eda_network.png", dpi=130); plt.close()
 
 fig, ax = plt.subplots(figsize=(11, 5.5))
-for p, c in [("train", "tab:blue"), ("student_test", "tab:orange")]:
+for p, c in [("train", "0.0"), ("student_test", "0.6")]:
     s = inv[inv.partition == p]
     ax.scatter((s.lon_min + s.lon_max) / 2, (s.lat_min + s.lat_max) / 2, s=25, c=c, label=p)
 ax.set(title="Trip locations (centroid lon/lat)", xlabel="longitude", ylabel="latitude", xlim=(-180, 180), ylim=(-60, 75)); ax.legend(); ax.grid(alpha=.3)
@@ -109,8 +110,8 @@ for ax, (part, tid) in zip(axs.ravel(), [("train", "00000048"), ("train", "00000
         ax.plot([p_[0], q_[0]], [p_[1], q_[1]], color="0.8", lw=.6)
     r = tr.route
     for k in r:
-        ax.plot([a[k, 0], b[k, 0]], [a[k, 1], b[k, 1]], color="green", lw=2)
-    ax.plot(tr.xy[:, 0], tr.xy[:, 1], ".", ms=1.5, color="tab:blue")
+        ax.plot([a[k, 0], b[k, 0]], [a[k, 1], b[k, 1]], color="0.0", lw=2.2)
+    ax.plot(tr.xy[:, 0], tr.xy[:, 1], ".", ms=1.5, color="0.55")
     ax.set(title=f"{part}/{tid}", aspect="equal", xlim=(x0, x1), ylim=(y0, y1)); ax.set_xticks([]); ax.set_yticks([])
-plt.suptitle("GPS (blue), road network (grey), reference route (green) — local AEQD metres")
+plt.suptitle("GPS points (grey dots), road network (light grey), reference route (black) — local AEQD metres")
 plt.tight_layout(); plt.savefig(f"{F}/eda_trajectories.png", dpi=130); plt.close()

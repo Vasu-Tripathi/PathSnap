@@ -185,11 +185,24 @@ feat_tab = pd.DataFrame([
     ("n_cand, is_twoway, out_deg_to, in_deg_from", "Local road density and junction topology – ambiguity is higher at dense junctions."),
 ], columns=["Features", "Why"])
 
+EV = None
+if PHASE == 2 and os.path.exists(f"{R}/evaluator_results.csv"):
+    EV = pd.read_csv(f"{R}/evaluator_results.csv", dtype={"trip": str})
+    _w = EV.n_gps / EV.n_gps.sum()
+    EVS = dict(top1=(EV.top1_hmm * _w).sum(), clf=(EV.top1_classifier_only * _w).sum(), f1=EV.route_f1.mean(),
+               P=EV.route_precision.mean(), Rc=EV.route_recall.mean(), cont=EV.route_continuity.mean(),
+               better=int((EV.top1_hmm > EV.top1_classifier_only).sum()), tmax=EV.server_time_s.max(), tmin=EV.server_time_s.min())
+    ev_tab = EV.copy()
+    for c in ["top1_hmm", "top1_classifier_only", "route_precision", "route_recall", "route_f1", "route_continuity"]:
+        ev_tab[c] = ev_tab[c].map(lambda x: f"{x:.4f}")
+    ev_tab.columns = ["Trip", "GPS obs", "Top-1 (HMM)", "Top-1 (classifier only)", "Route P", "Route R", "Route F1", "Continuity", "HMM breaks", "Server time (s)"]
 TITLE = "PathSnap — Review 1 Report" if PHASE == 1 else "PathSnap — Technical Report"
 if PHASE == 2:
     SUMMARY_TAIL = (f"On the student-test trips, tuned LightGBM alone reaches Top-1 {pc(hc.loc['LightGBM_tuned','clf_top1'])}. With the HMM it reaches "
                     f"<b>{pc(hc.loc['LightGBM_tuned','hmm_top1'])}</b>, with route F1 {f3(hc.loc['LightGBM_tuned','hmm_route_F1'])} and route continuity "
-                    f"{f3(hc.loc['LightGBM_tuned','hmm_route_continuity'])}.\nThe system is served by a FastAPI backend and a browser UI.")
+                    f"{f3(hc.loc['LightGBM_tuned','hmm_route_continuity'])}."
+                    + (f" On the <b>10 hidden evaluator trips</b>, run once through the deployed two-laptop system, it reached <b>{pc(EVS['top1'])}</b> Top-1 (classifier only: {pc(EVS['clf'])}), with mean route F1 {EVS['f1']:.3f} and route continuity {EVS['cont']:.3f}." if EV is not None else "")
+                    + "\nThe system is served by a FastAPI backend and a browser UI.")
     SEL_TAIL = (f"\nEvery model gains a lot from the HMM. After decoding, the top three end up within 0.5 points of each other (RandomForest + HMM "
                 f"{pc(hc.loc['RandomForest','hmm_top1'])} vs tuned LightGBM + HMM {pc(hc.loc['LightGBM_tuned','hmm_top1'])}). We kept LightGBM because of its "
                 "better calibration and 16× faster training, and because it was chosen on CV before decoding was tuned.")
@@ -205,17 +218,20 @@ else:
     LIM_DEC = ""
 html = f"""<!DOCTYPE html><html><head><meta charset="utf-8"><title>PathSnap Technical Report</title>
 <style>
-@page {{ size: A4; margin: 16mm 14mm; }}
-body {{ font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 10.5pt; color:#1d2433; line-height:1.45; }}
-h1 {{ font-size: 24pt; margin: 0 0 4px; }} h2 {{ font-size: 15pt; border-bottom: 2px solid #d92d20; padding-bottom: 3px; margin-top: 22px; page-break-after: avoid; }}
-h3 {{ font-size: 12pt; margin: 16px 0 6px; page-break-after: avoid; }} .fam {{ color:#667085; font-weight:400; }}
-p.q {{ font-weight: 600; margin: 8px 0 2px; color:#344054; }} p {{ margin: 3px 0 7px; text-align: justify; }}
-table {{ border-collapse: collapse; width: 100%; font-size: 8.6pt; margin: 6px 0 10px; page-break-inside: avoid; }}
-th {{ background:#101828; color:#fff; padding: 4px 5px; text-align:left; }} td {{ border-bottom: 1px solid #e4e7ec; padding: 3px 5px; }}
-tr:nth-child(even) td {{ background:#f8f9fb; }}
-figure {{ margin: 8px 0 12px; text-align:center; page-break-inside: avoid; }} figcaption {{ font-size: 8.8pt; color:#667085; margin-top:3px; }}
-.cover {{ border-left: 6px solid #d92d20; padding: 8px 16px; margin-bottom: 16px; }} .box {{ background:#f6f7f9; border:1px solid #e4e7ec; border-radius:6px; padding:8px 12px; margin:8px 0; }}
-.pb {{ page-break-before: always; }} code {{ font-size: 9pt; background:#f2f4f7; padding: 0 3px; }}
+@page {{ size: A4; margin: 22mm 20mm; }}
+body {{ font-family: "Times New Roman", Times, Georgia, serif; font-size: 11pt; color:#000; line-height:1.4; }}
+h1 {{ font-size: 20pt; margin: 0 0 6px; font-weight: bold; text-align:center; }}
+h2 {{ font-size: 14pt; font-weight: bold; margin: 20px 0 6px; page-break-after: avoid; }}
+h3 {{ font-size: 12pt; font-weight: bold; margin: 14px 0 5px; page-break-after: avoid; }}
+.fam {{ font-weight: normal; font-style: italic; }}
+p.q {{ font-weight: bold; margin: 8px 0 2px; }} p {{ margin: 3px 0 7px; text-align: justify; }}
+table {{ border-collapse: collapse; width: 100%; font-size: 9pt; margin: 8px 0 12px; page-break-inside: avoid; border-top: 1.5px solid #000; border-bottom: 1.5px solid #000; }}
+th {{ font-weight: bold; text-align:left; padding: 3px 5px; border-bottom: 1px solid #000; }}
+td {{ padding: 2px 5px; }}
+figure {{ margin: 8px 0 12px; text-align:center; page-break-inside: avoid; }} figcaption {{ font-size: 9.5pt; margin-top:4px; }}
+.cover {{ text-align:center; margin-bottom: 18px; }} .cover div {{ margin: 2px 0; }}
+.box {{ margin: 10px 0; }}
+.pb {{ page-break-before: always; }} code {{ font-family: "Courier New", monospace; font-size: 9.5pt; }}
 </style></head><body>
 <div class="cover"><h1>{TITLE}</h1>
 <div>Distributed map-matching &amp; route reconstruction · UE24CS352A Machine Learning · PES University, RR Campus</div>
@@ -223,7 +239,7 @@ figure {{ margin: 8px 0 12px; text-align:center; page-break-inside: avoid; }} fi
 <div><b>Members:</b> {', '.join(TEAM['members'])}</div>
 <div><b>Repository:</b> {TEAM['repo']}</div></div>
 
-<div class="box"><b>Summary.</b> GPS fixes are matched to candidate road arcs within {50} m. A classifier scores each (fix, arc) pair, and an HMM with Viterbi decoding turns these scores into a connected route.
+<div class="box"><b>Abstract.</b> GPS fixes are matched to candidate road arcs within {50} m. A classifier scores each (fix, arc) pair, and an HMM with Viterbi decoding turns these scores into a connected route.
 We compared 7 models from 6 algorithm families with 5-fold trip-grouped CV on the training partition and evaluated them on the 10 student-test trips.
 <b>LightGBM</b> was selected and tuned with Bayesian optimisation (Optuna TPE, {bo['search']['n_trials']} trials).
 {SUMMARY_TAIL}</div>
@@ -294,6 +310,25 @@ The tuned model is deployed because it was the pre-registered choice on the CV o
 {img('bayes_opt.png', 98, 'Fig 4.1 – Optuna TPE trace (objective per trial and best-so-far), and untuned vs tuned comparison.')}
 {img('feature_importance.png', 60, 'Fig 4.2 – Tuned LightGBM feature importance (gain).')}
 """
+if PHASE == 2 and EV is not None:
+    EVAL_SECTION = f"""<h3>7.1 Evaluator test results (hidden partition)</h3>
+<p>The 10 reserved evaluator trips were placed in <code>data/eval_test/</code> on Laptop 1 (backend) and run <b>once</b>, trip by trip, from the UI on Laptop 2.
+The code was frozen before the run, and nothing was changed afterwards. Every metric was computed on the server from the hidden <code>.route</code> files.
+The table is transcribed from the API console log (Fig 7.1) and the UI result panels.</p>
+{table(ev_tab)}
+<p><b>Summary:</b> observation-weighted Top-1 is <b>{pc(EVS['top1'])}</b> with the HMM vs {pc(EVS['clf'])} for the classifier alone, and the HMM improved Top-1 on <b>{EVS['better']}/10</b> trips.
+Mean route precision is {EVS['P']:.3f}, recall {EVS['Rc']:.3f} and F1 {EVS['f1']:.3f}. Route continuity is {EVS['cont']:.3f} on every trip.
+Server time per trip ranged from {EVS['tmin']:.2f} s to {EVS['tmax']:.2f} s. The longest was trip 00000015, with 6,854 GPS fixes; the first requests also include warm-up.
+These results agree with the student-test estimate ({pc(hc.loc['LightGBM_tuned','hmm_top1'])}), so the development protocol did not over-fit.
+<b>Weakest trips:</b> 00000030 (Top-1 {pc(EV.set_index('trip').loc['00000030','top1_hmm'])}) and 00000015 ({pc(EV.set_index('trip').loc['00000015','top1_hmm'])}), both dense urban or forest-track networks with many parallel paths.
+Trip 00000023 has high Top-1 ({pc(EV.set_index('trip').loc['00000023','top1_hmm'])}) but low route precision ({EV.set_index('trip').loc['00000023','route_precision']:.3f}). Its short trajectory makes a few extra gap-fill arcs weigh heavily. As on student-test, recall stays at about 0.99 while precision is the limiting factor.</p>
+{img('eval_api_cmd_log.png', 100, 'Fig 7.1 – Laptop 1 (backend) command prompt: the FastAPI server loads the tuned LightGBM and HMM parameters, then logs every POST /predict from the UI laptop (10.8.121.67) with server-side Top-1, classifier-only Top-1, route F1, continuity and time.')}
+{img('eval_ui_00000087.png', 95, 'Fig 7.2 – Laptop 2 (UI): evaluator trip 00000087, predicted route over OpenStreetMap, Top-1 99.57%.')}
+{img('eval_ui_00000015.png', 95, 'Fig 7.3 – Laptop 2 (UI): evaluator trip 00000015, the longest trip, in a dense forest-track network, Top-1 89.51%.')}
+{img('eval_ui_00000030.png', 95, 'Fig 7.4 – Laptop 2 (UI): evaluator trip 00000030, the hardest trip, Top-1 83.79% (classifier only 79.66%).')}
+"""
+else:
+    EVAL_SECTION = ""
 html_b = "" if PHASE == 1 else f"""
 <h2 class="pb">5. HMM and Viterbi route reconstruction</h2>
 <p class="q">Q1. Hidden states</p><p>At step <i>t</i> (one GPS fix), the hidden states are that fix's candidate directed arcs, each with its projection parameter <i>τ</i> ∈ [0, 1] along the arc. The candidate-to-arc correspondence is kept through decoding, so every decoded state is a real arc id.</p>
@@ -330,16 +365,14 @@ The interactive HTML (with an OpenStreetMap base layer) is in <code>results/maps
 The prediction path reads only <code>.track/.nodes/.arcs</code>: candidates → LightGBM (portable <code>artifacts/final_model.txt</code>) → Viterbi → gap filling. The <code>.route</code> file is read only afterwards, on the server, to compute Top-1, route P/R/F1 and continuity.
 The response carries the predicted polyline, the GPS points, the candidate network and the metrics, never the reference. Every request is logged to the console with its trip id and metrics.
 <b>Laptop 2</b> serves <code>ui/index.html</code> with <code>python -m http.server 5500</code>. The UI lists the trips from <code>/trips</code>, sends the selected id to <code>/predict</code>, and draws the result on a Leaflet map with a legend and layer control.
-In our test run, with student_test standing in for the evaluator set, all 10 trips succeeded in 0.15–2.3 s each. The API's metrics matched the offline evaluation exactly.</p>
-{img('ui_result_00000040.png', 95, 'Fig 7.1 – UI after running trip 00000040 (base map tiles were unavailable in the offline screenshot environment).')}
-{img('ui_result_00000077.png', 95, 'Fig 7.2 – UI result for trip 00000077.')}
-{img('api_log_terminal.png', 95, 'Fig 7.3 – API console log from our test run, showing requests and server-side metrics. Final screenshots from the receiving laptop CMD are taken during the evaluation demo.')}
+During development, with student_test standing in for the evaluator set, all 10 trips succeeded and the API's metrics matched the offline evaluation exactly. The final evaluator run used two physical laptops on the same network: the backend at 10.8.121.42:8000, and the UI on a second laptop.</p>
+{EVAL_SECTION}
 """
 html_c = f"""
 <h2>8. Limitations, integrity and reproducibility</h2>
 <p><b>Reference-label limitations.</b> The per-fix labels come from our monotone alignment of GPS to the <code>.route</code>, so they inherit GPS noise and any route errors. At junctions, and on two-way roads where opposite arcs overlap, a fix's "true" arc is genuinely ambiguous, so Top-1 understates route quality{LIM_RECALL}.
 Two training trips have systematic offsets and were excluded. If such a trip appears at evaluation time, the 50 m candidate radius will often miss the true arc; the 300 m fallback keeps the pipeline running, but accuracy will be low.
-<b>Leakage control.</b> Splits are trip-grouped. {LIM_DEC}Model and hyperparameter choices used training CV. The evaluator partition was never read, and nothing is hard-coded.
+<b>Leakage control.</b> Splits are trip-grouped. {LIM_DEC}Model and hyperparameter choices used training CV. The evaluator partition was never read during development; it was used exactly once, for the final two-laptop run in §7.1, with the code frozen beforehand. Nothing is hard-coded.
 <b>Reproducibility.</b> Every number in this report is read by <code>report/build_report.py</code> from <code>results/</code>, and those files are produced by <code>scripts/01–08</code> with seed 42.</p>
 <p><b>AI-assistance disclosure.</b> {TEAM['ai_disclosure']}</p>
 </body></html>"""

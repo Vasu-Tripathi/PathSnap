@@ -62,3 +62,10 @@ Noisy 1 Hz GPS → the road arcs actually driven. Each trip has its own road net
 **8. Deployment**
 - Laptop 1: `uvicorn api.app:app --host 0.0.0.0 --port 8000` with `PATHSNAP_EVAL_DIR` pointing at the eval trips. The console logs each request.
 - Laptop 2: `cd ui && python -m http.server 5500`, open it in a browser, then enter `http://<laptop1-ip>:8000` and click Connect.
+
+**9. Evaluator results (hidden 10 trips, a single run on two laptops)**
+- Top-1 (weighted by GPS points): **94.27%** with the HMM, vs 90.33% for the classifier alone. The HMM improved all 10 trips.
+- Mean route F1 is 0.925 (precision 0.876, recall 0.994). Continuity is 1.000 on every trip.
+- **Best trips:** 87 (99.57%), 49 (99.36%) and 73 (98.86%). **Worst:** 30 (83.79%) and 15 (89.51%), both dense networks with parallel paths.
+- This is consistent with the student-test result (93.50%), so the development protocol didn't overfit.
+- The code was frozen before the run. Nothing was changed afterwards.

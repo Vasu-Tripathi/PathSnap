@@ -3,13 +3,14 @@ import os, json
 import numpy as np, pandas as pd
 import matplotlib; matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+plt.style.use("grayscale"); plt.rcParams.update({"font.family": "serif", "axes.prop_cycle": plt.cycler(color=["0.0", "0.55", "0.3", "0.75"])})
 import _path
 
 R, F = _path.RES, _path.FIG
 mc = pd.read_csv(f"{R}/model_comparison.csv")
 folds = pd.read_csv(f"{R}/model_cv_folds.csv")
 names = mc.model.tolist(); x = np.arange(len(names))
-C = plt.cm.tab10(np.arange(len(names)))
+C = [str(v) for v in np.linspace(0.1, 0.7, len(names))]
 
 # 1. CV macro F1 across models (box over folds + mean)
 fig, ax = plt.subplots(1, 2, figsize=(14, 4.5))
@@ -39,7 +40,7 @@ plt.tight_layout(); plt.savefig(f"{F}/logloss_inference.png", dpi=130); plt.clos
 fig, axs = plt.subplots(1, len(names), figsize=(3 * len(names), 3))
 for ax, (_, r) in zip(axs, mc.iterrows()):
     cm = np.array([[r.tn, r.fp], [r.fn, r.tp]]); cmn = cm / cm.sum(1, keepdims=True)
-    ax.imshow(cmn, cmap="Blues", vmin=0, vmax=1)
+    ax.imshow(cmn, cmap="Greys", vmin=0, vmax=1)
     for i in range(2):
         for j in range(2):
             ax.text(j, i, f"{cm[i,j]}\n{cmn[i,j]:.2f}", ha="center", va="center", fontsize=8, color="white" if cmn[i, j] > .5 else "black")
@@ -92,10 +93,10 @@ if os.path.exists(f"{R}/hmm_comparison_student_test.csv"):
     plt.suptitle("Student test: classifier-only vs classifier + HMM/Viterbi"); plt.tight_layout(); plt.savefig(f"{F}/hmm_vs_classifier.png", dpi=130); plt.close()
     g = pd.read_csv(f"{R}/hmm_decoder_grid_train.csv")
     pv = g.pivot(index="alpha", columns="beta", values="hmm_top1")
-    fig, ax = plt.subplots(figsize=(6, 4)); im = ax.imshow(pv.values, cmap="viridis")
+    fig, ax = plt.subplots(figsize=(6, 4)); im = ax.imshow(pv.values, cmap="Greys")
     for i in range(pv.shape[0]):
         for j in range(pv.shape[1]):
-            ax.text(j, i, f"{pv.values[i,j]:.4f}", ha="center", va="center", color="w", fontsize=8)
+            ax.text(j, i, f"{pv.values[i,j]:.4f}", ha="center", va="center", color=("w" if pv.values[i,j] > pv.values.mean() else "k"), fontsize=8)
     ax.set(xticks=range(pv.shape[1]), xticklabels=pv.columns, yticks=range(pv.shape[0]), yticklabels=pv.index, xlabel="beta (m)", ylabel="alpha",
            title="HMM decoder grid (OOF train trips): Top-1"); plt.colorbar(im); plt.tight_layout(); plt.savefig(f"{F}/hmm_grid.png", dpi=130); plt.close()
     per = pd.read_csv(f"{R}/hmm_student_test_LightGBM_tuned.csv")
