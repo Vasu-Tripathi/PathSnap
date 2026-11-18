@@ -1,0 +1,8 @@
+__pycache__/
+*.pyc
+.venv/
+.env
+.ipynb_checkpoints/
+results/data/cand_*.parquet
+results/data/preds/train_oof_*.parquet
+results/maps/*_notiles*.html
