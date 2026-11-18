@@ -18,6 +18,11 @@ data/
   train/            80 training trips (.track .nodes .arcs .route)
   student_test/     10 development-test trips
   eval_test/        put the 10 evaluator trips here on Laptop 1 (never used in development)
+notebooks/          walkthrough notebooks (saved with outputs) that call the code in src/ and scripts/
+  01_EDA.ipynb                      inventory, data quality, plots, Folium map
+  02_Preprocessing_Features.ipynb   projection, label alignment, candidates, 17 features
+  03_Model_Training.ipynb           7 models trained live + CV/test comparison
+  04_Bayesian_Optimisation.ipynb    live Optuna TPE study + full 30-trial record
 src/pathsnap/
   core.py           loading, local AEQD projection, reference-label alignment, candidates, features
   metrics.py        Top-1, macro F1, log loss, route continuity, route P/R/F1
@@ -47,13 +52,34 @@ python -m venv .venv
 pip install -r requirements.txt
 ```
 
+## Notebooks (start here)
+
+The notebooks in `notebooks/` are the main walkthrough. They are saved with outputs, so they open ready to read (on GitHub, or in Jupyter / VS Code). They call the same code as the scripts, so the numbers match exactly: the live training in `03_Model_Training` reproduces the logged Top-1 scores with a difference of 0.0.
+
+| Notebook | Covers |
+|---|---|
+| `01_EDA.ipynb` | Raw file structure, inventory, missing values, sampling gaps, anomalies, connectivity, trajectory plots, Folium map |
+| `02_Preprocessing_Features.ipynb` | Local metric projection (checked against haversine), monotone label alignment, candidate generation, the 17 features, nearest-arc baseline |
+| `03_Model_Training.ipynb` | LogisticRegression, GaussianNB, KNN, RandomForest, LightGBM, XGBoost and MLP, each trained live, with the comparison table and plots |
+| `04_Bayesian_Optimisation.ipynb` | Short live Optuna TPE study, the full 30-trial record, tuned vs untuned |
+
+To re-run them, build the candidate tables first (they are git-ignored because of their size):
+
+```bash
+pip install -r requirements.txt jupyter
+cd scripts && python 02_build_dataset.py && cd ../notebooks
+jupyter notebook
+```
+
+`03_Model_Training` loads the cross-validation numbers from the script log by default. Set `RUN_CV = True` in it to re-run the 5-fold CV live (slow for KNN and RandomForest).
+
 ## Parallel processing across the team
 
 The dataset build and model training can be split across 4 laptops (`02_build_dataset.py --shard k`, `02b_merge_shards.py`, `03_train_compare.py --models ...`, `03b_merge_results.py`). See **TEAM_WORKFLOW.md**.
 
-## Reproduce the experiments
+## Reproduce the experiments with scripts
 
-Run the scripts in order from the repo root:
+The scripts run the full pipeline without notebooks, which is useful for parallel runs. Run them in order from the repo root:
 
 ```bash
 cd scripts
